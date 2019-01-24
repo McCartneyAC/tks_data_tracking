@@ -60,6 +60,7 @@ Private Sub CommandButton1_Click()
     'trans id
     Sheets("data").Range("A" & (row_number)) = next_transaction_id
     'user
+    'Sheets("data").Range("B" & (row_number)) = Application.UserName
     Sheets("data").Range("B" & (row_number)) = qa_user
     'time
     Sheets("data").Range("C" & (row_number)) = qa_time
@@ -79,6 +80,16 @@ Private Sub CommandButton1_Click()
     Sheets("data").Range("J" & (row_number)) = qa_notes
 
 
+' clear submission for next addition
+    Sheets("pointsheet").Range("E7") = ""
+    'Sheets("pointsheet").Range ("E8")= ""
+    Sheets("pointsheet").Range("E9") = ""
+    Sheets("pointsheet").Range("E10") = ""
+    Sheets("pointsheet").Range("E12") = ""
+    Sheets("pointsheet").Range("E13") = ""
+    Sheets("pointsheet").Range("E14") = ""
+    Sheets("pointsheet").Range("E15") = ""
+    Sheets("pointsheet").Range("E16") = ""
 
 
 
