@@ -29,7 +29,6 @@ scale_colour_inova<-scale_color_inova
 
 
 ## Example workflow for first student: 
-
 dat<-tribble(
   ~date, ~day, ~Respect, ~OnTask, ~Focus, ~mean, ~week,
 "08/28/18","Tuesday",2.00,2.00,2.00,2.00,1,
@@ -127,7 +126,6 @@ dat<-tribble(
 "01/22/19","Tuesday",NA,NA,NA,NA,21,
 "01/23/19","Wednesday",NA,NA,NA,NA,21,
 "01/24/19","Thursday",NA,NA,NA,NA,21,
-"01/25/19","Friday",NA,NA,NA,NA,21,
 "01/28/19","Monday",1.67,1.67,1.67,1.67,22,
 "01/29/19","Tuesday",0.00,0.00,0.00,0.00,22,
 "02/04/19","Monday",1.67,2.00,2.33,2.00,23,
@@ -139,7 +137,6 @@ dat<-tribble(
 "02/13/19","Wednesday",2.33,2.67,3.00,2.67,24,
 "02/14/19","Thursday",2.33,2.33,2.67,2.44,24,
 "02/15/19","Friday",NA,NA,NA,NA,24,
-"02/18/19","Monday",NA,NA,NA,NA,25,
 "02/19/19","Tuesday",2.00,2.00,2.00,2.00,25,
 "02/20/19","Wednesday",NA,NA,NA,NA,25,
 "02/21/19","Thursday",NA,NA,NA,NA,25,
@@ -179,7 +176,17 @@ dat<-tribble(
 "04/10/19","Wednesday",0.33,0.33,0.33,0.33,32,
 "04/11/19","Thursday",0.00,0.00,0.00,0.00,32,
 "04/22/19","Monday",0.00,0.00,0.00,0.00,33,
-"04/23/19","Tuesday",2.00,2.00,2.00,2.00,33
+"04/23/19","Tuesday",2.00,2.00,2.00,2.00,33,
+"04/24/19","Wednesday",2,1.66,2,1.88,33,
+"04/25/19","Thursday", 0,0,0,0,33,
+"04/26/19","Friday",NA,NA,NA,NA,33,
+"04/29/19","Monday",NA,NA,NA,NA,34,
+"04/30/19","Tuesday",2,2,3,2.33,34,
+"05/01/19","Wednesday",0,0,0,0,34,
+"05/02/19","Thursday",NA,NA,NA,NA,34,    
+"05/03/19","Friday",0.5,0.5,0.5,0.5,34,
+"05/06/19","Monday",0.5,0.5,0.5,0.5,35,
+"05/07/19","Tuesday",0,0,0,0,35
 )
 
 
