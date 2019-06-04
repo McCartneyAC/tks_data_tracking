@@ -454,3 +454,19 @@ interaction.plot(x.factor = dat$admin, trace.factor = dat$core,
                  pch=c(1,19), 
                  col = c("#004b8d", "#d52b1e", "#6caddf", "#4d4f53"))
     
+# dummy variables generated for your own individual use:
+dat   %>% 
+mutate(yearfirst = if_else(admin == "2015_2016", 1, 0))  %>% 
+mutate(yearsecond = if_else(admin == "2016_2017", 1, 0))  %>% 
+mutate(yearthird = if_else(admin == "2017_2018", 1, 0))  %>% 
+mutate(yearfourth = if_else(admin == "2018_2019", 1, 0))  %>% 
+mutate(mathematics = if_else(core == "math", 1,0))  %>% 
+mutate(english = if_else(core =="eng",1,0))  %>% 
+mutate(science = if_else(core =="sci", 1,0))  %>% 
+mutate(history = if_else(core == "histss", 1,0))  %>% 
+rlm(scaled_score ~ yearsecond + yearthird + yearfourth + mathematics + english + science + 
+    yearsecond*mathematics + yearsecond*english + yearsecond*science + 
+    yearthird*mathematics + yearthird*english + yearthird*science + 
+    yearfourth*mathematics + yearfourth*english + yearfourth*science, 
+    data = ., psi = psi.bisquare)  %>% 
+summary()
