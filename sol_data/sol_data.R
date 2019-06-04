@@ -439,6 +439,18 @@ dat   %>%
     lm(scaled_score ~ admin*core, data = .)  %>% 
     summary()   
     
-    
-    
+library(MASS)
+dat   %>% 
+# heteroskedasticity-robust because of 2015-2016 SY
+rlm(scaled_score ~ admin*core, data = ., psi = psi.bisquare)  %>% 
+summary()
+
+# Two way anova interaction. 
+# inova ANOVA!
+interaction.plot(x.factor = dat$admin, trace.factor = dat$core, 
+                 response = dat$scaled_score, fun = mean, 
+                 type = "b", legend = TRUE, 
+                 xlab = "Academic Year", ylab="SOL Score", 
+                 pch=c(1,19), 
+                 col = c("#004b8d", "#d52b1e", "#6caddf", "#4d4f53"))
     
