@@ -412,3 +412,33 @@ labs(title= "SOL Scores",
 anova(lm(scaled_score ~ core, data = dat))
 car::leveneTest(scaled_score ~ core, data = dat)
 # need heteroskedasticity-robust standard errors here.
+
+dat  %>% 
+ggplot(aes(x = scaled_score, fill = core)) + 
+geom_density(alpha = 0.4)+ 
+# scale_fill_inova() + 
+theme_light() + 
+labs(title = "SOL scores") + 
+geom_vline(xintercept = 400)
+
+
+dat  %>% 
+ggplot(aes(x = admin, y = scaled_score, color = admin))  + 
+geom_boxplot() +
+scale_color_inova() + 
+geom_jitter(alpha = 0.4, width = 0.25, color = "#999999") +
+theme_light() +
+labs(title= "SOL Scores", 
+     subtitle = "KA's Tenure",
+     y = "Score", 
+     x = "Academic Year", 
+     color = "Subject Group"
+    ) 
+    
+dat   %>% 
+    lm(scaled_score ~ admin*core, data = .)  %>% 
+    summary()   
+    
+    
+    
+    
