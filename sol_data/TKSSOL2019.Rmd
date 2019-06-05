@@ -1,0 +1,23 @@
+---
+title: "Kellar School SOL Analysis 2019"
+author: "Andrew McCartney"
+date: "6/4/2019"
+output: html_document
+---
+# Introduction
+
+FAIRFAX, Virginia -- 
+
+# Question 1
+# Question 2
+# Question 3
+# Question 4
+# ...
+# Conclusion
+
+
+
+```{r setup, include=FALSE}
+
+```
+
