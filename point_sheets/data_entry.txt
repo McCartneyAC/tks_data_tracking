@@ -1,0 +1,15 @@
+## excel code to return entered data to individual student page:
+
+=IFERROR(
+ IF(
+  VLOOKUP(
+   CONCATENATE(A5,"DoeJohn",B$1,$F5),
+   Sheet1!A:H,7,
+   FALSE)=0,
+ 0,
+ 1),
+1)
+
+
+# goes in each individual cell of student data page in June 2019 point sheet revisions. 
+# adjust column vectors to refer to individual point criteria types. 
