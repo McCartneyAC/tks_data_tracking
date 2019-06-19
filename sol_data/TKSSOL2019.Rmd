@@ -1,23 +1,391 @@
 ---
 title: "Kellar School SOL Analysis 2019"
 author: "Andrew McCartney"
-date: "6/4/2019"
-output: html_document
+date: "6/19/2019"
+output:
+  html_document:
+    code_folding: hide
+    df_print: paged
+    fig_caption: yes
+    theme: journal
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
 ---
-# Introduction
 
-FAIRFAX, Virginia -- 
-
-# Question 1
-# Question 2
-# Question 3
-# Question 4
-# ...
-# Conclusion
 
 
 
 ```{r setup, include=FALSE}
+library(ggplot2)
+library(ggridges)
+library(ggvis)
+library(readr)
+library(readxl)
+library(mccrr)
+library(dplyr)
+library(tibble)
+library(lubridate)
+library(reshape2)
+library(forcats)
+library(sjPlot)
+library(extrafont); loadfonts()
+library(ggsci)
+library(psych)
+library(MASS)
+library(car)
+library(lme4)
+
+inova<-c("#004b8d", "#d52b1e", "#6caddf", "#4d4f53", "#a5a5a9")
+inovapal <- inova
+pal_inova <- function(palette = c("inova"), alpha = 1) {
+    palette <- match.arg(palette)
+    if (alpha > 1L | alpha <= 0L) stop("alpha must be in (0, 1]")
+        raw_cols <- inova
+        raw_cols_rgb <- col2rgb(raw_cols)
+        alpha_cols <- rgb(
+            raw_cols_rgb[1L, ], raw_cols_rgb[2L, ], raw_cols_rgb[3L, ],
+            alpha = alpha * 255L, names = names(raw_cols),
+            maxColorValue = 255L
+        )
+        scales::manual_pal(unname(alpha_cols))
+        }
+scale_color_inova <- function(palette = c("inova"), alpha = 1, ...) {
+    palette <- match.arg(palette)
+    ggplot2::discrete_scale("colour", "inova", pal_inova(palette, alpha), ...)
+}
+scale_colour_inova<-scale_color_inova
+
+# this is a function I wrote to fit in to `select_if`. You'll see it later. 
+is_extant <-function(x) any(!is.na(x))
+is_numeric<-function(x) any(is.numeric(x))
+
+# Required for ggvis to work the way we wish
+# # this is a handy function from a user on stack-overflow. This kind of thing is necessary because
+# # ggvis is no longer under development and they literally didn't get around to making an "add_title"
+# # function for the package. Oh how I wish ggvis were still under development. 
+add_title <- function(vis, ..., x_lab = "X units", title = "Plot Title") 
+{
+  add_axis(vis, "x", title = x_lab) %>% 
+    add_axis("x", orient = "top", ticks = 0, title = title,
+             properties = axis_props(
+               axis = list(stroke = "white"),
+               labels = list(fontSize = 0)
+             ), ...)
+}
+
+# dat <- readxl::read_xlsx(...)
+dat <- read_xlsx("D:\\points_project\\longitudinal_anonymized.xlsx") %>% 
+  mutate(date = mdy(date)) %>% 
+  rename(sti = `State Testing Identifier (STI`)
+
+center <- function(df, var, center = 0) {
+  # centers a running variable on user input center
+  # first successful tidyeval function !!!
+  user_var <- enquo(var)
+  varname <- quo_name(user_var)
+  center <- enquo(center)
+  mutate(df, !!varname := (!!user_var-!!center))
+}
+```
+
+# Introduction
+
+FAIRFAX, Virginia -- This is a living document containing a series of analysis meant to address program-wide, big-picture questions evaluating and assessing the Kellar School's academic efficacy. As additional research questions are identified or as methodological considerations become more developed, additional notes and analysis will be added. In general, the document should be read tentatively with the following caveats: (1) data requirements--for many of these analytic strategies are much larger or much cleaner than what we possess. (2) Time--the data represent a snapshot in time that may not capture factors that are relevant at other times during the school year. (3) History--For example, events that occur in a student's life, a school community, or in the wider world can have effects on student outcomes that will never be captured herein. A good example would be a change in mediction regimen or teacher staffing. (4) Maturation--theoretically, student should be improving at all times regardless of what is done with them. Additionally, irrespective of how good a teacher is, the "teacher effect" is about d = 0.30 effect size, meaning that many of the differences we see here are small relative to the size of other educational effects. 
+
+## The SOL scores in general 
+
+SOLs scores are given as scaled scores, with a possible range of 200 to 600 points. A passing score is 400, but additional cut scores exist: students earning a 375 are available for an expedited re-take and, if they have a documented learning disability, are eligible for credit accommodations (to wit, a Locally Awarded Verified Credit). At lower levels and of the scaled score, an individual correct answer may represent 5-10 scaled score points. At the range near a passing score, each correct answer is 4 points. Above scores of 550 or so, the correspondence between number of correct answers and the scaled score is looser--it is possible to miss one or two questions and still earn a 600. Additionally, approximately 10-15 of the questions each student answers are not counted toward a scaled score, as they are items that are being tested for future use on SOLs, provided they are properly validated. 
+
+### SOL scores at Kellar
+
+
+```{r message=FALSE, warning=FALSE}
+dat %>% 
+  filter(!is.na(scaled_score)) %>% 
+  # select(scaled_score) %>%
+  ggvis( ~scaled_score) %>% 
+  layer_histograms(fill := sample(inova, 1),
+                    width = input_slider(1, 20, value = 8)) %>% 
+  add_title(title = "Histogram of SOL Scaled Scores",
+          x_lab= "SOL Scaled Scores")
+```
+
+### SOL Scores by Core Subject
+
+```{r message=FALSE, warning=FALSE}
+dat %>% 
+  dplyr::select(scaled_score, core) %>% 
+  # select_if(is_extant) %>%
+  # select_if(is_numeric) %>% 
+  psych::describeBy(group = dat$core, fast = TRUE)
+```
+
+## FSIQ scores in this dataset
+
+FSIQ (Full Scale Intelligence Quotient, but not really) is intended to be a measure of intelligence among studnets capturing verbal, nonverbal, and quantitative reasoning, among others. Each student who is referred to TKS is required to have a psychological evaluation, but these are not always delivered to TKS in the referral packet. This is the first reason why many FSIQ scores are missing. 
+
+The second reason is that responsible psychometricians are often reluctant to report out a Full-Scale IQ when the subcomponents of the IQ assessment are widely dispersed. For example, if a student has a very low verbal intelligence (say, 70) and a very high nonverbal intelligence relative to that, (say, 115), the FSIQ begins to lack validity as a measure of *general* intelligence. Many of our students therefore have no FSIQ for this reason. 
+
+Finally, there is not one measure of IQ being employed in the evaluation of our students. We have scores from the KTEA, the Wechsler, and other IQ tests. These scores do not always, and aren't necessarily intended to, agree with one another. There should be a correlation, but its strength will not be as high as one might expect. However, to include the type of IQ test as a variable adds more noise to our data than it eliminates--we are using FSIQ as a control covariate and do not need precise scores for this reason. 
+
+
+### FSIQ at Kellar
+```{r fsiq_histo, message=FALSE, warning=FALSE}
+dat %>% 
+  filter(!is.na(fsiq)) %>% 
+  # select(scaled_score) %>%
+  ggvis( ~fsiq) %>% 
+  layer_histograms(fill := sample(inova, 1),
+                    width = input_slider(1, 20, value = 6)) %>% 
+  add_title(title = "Histogram of SOL Scaled Scores",
+          x_lab= "SOL Scaled Scores")
+```
+
+## Methodological Note:
+
+**On Clustering:** When testing the effectiveness of a treatment in many fields such as Education or Mental Health, one needs to consider the effect of "clustering" or "nesting" on the outcomes of individual students or patients. What this means is that individual teachers and therapists, who may have 30-150 or more subjects in their treatment group, may have unaccounted-for effects on the outcomes of individual students or patients. 
+For example, if Teacher A and Teacher B both are in the treatment group, but they implement the treatment differently from one another, then Teacher A's students effectively got a *different treatment* from Teacher B's students. This effect can bias the results. In education research, we find that about 15% of a student's score-variability comes from what teacher they have. About 85% comes from individual student-level characteristics. In our data set, we have SOL scores that are clustered within-student, students that are clustered within-teacher (though this changes) and students that are clustered within-subject. 
+
+Value-Added models are a popular way of assessing teacher efficacy in public school systems, in part because it allows one to account for clustering and find the pure 'teacher effect' for each individual teacher in a district each year, year-over-year. This is logistically impossible at TKS. However, with a sufficiently-large data set of student scores, we can *start* to address the clustering problem in a few different ways. 
+
+These analyses will use two different techniques to address clustering. At the student level, we will use linear-mixed-effects (A.K.A. Multilevel Modeling, A.K.A. Hierarchical Linear Modeling). For teacher-level clustering, we will use Fixed Effects (in its econometric sense) to determine the effect of each teacher. 
+
+
+# Question 1: SOL Scores Over Time
+
+## In the last three to four years, have SOL scores changed on average? 
+
+```{r}
+
+dat  %>%
+ggplot(aes(x = date, y = scaled_score, color = core))  +
+# geom_jitter(alpha = 0.4, width = 0.25, height = 0.25)  +
+geom_point(alpha = 0.4)+
+geom_smooth() +
+scale_color_inova() +
+theme_light() +
+labs(title= "History of SOL Scores",
+     subtitle = "K A's Tenure",
+     y = "Score",
+     x = "date",
+     color = "Subject Group"
+    ) +
+scale_y_continuous(limits = c(200, 600)) +
+scale_x_date(date_breaks = "1 month") +
+theme(axis.text.x = element_text(angle = 70, hjust = 1))
+```
+
+
+```{r}
+ dat %>%
+   ggplot(aes(x = scaled_score, y = admin, fill = admin)) +
+   ggridges::geom_density_ridges(alpha = 0.8, fill = sample(inovapal, 1)) +
+   labs(title ="Density of SOL scores by Acadmic Year")+
+   theme_light() +
+   scale_fill_manual(values = inovapal) +
+   scale_color_manual(values = inovapal) +
+   geom_vline(xintercept = 400)
+```
+
+
+
+
+```{r}
+
 
 ```
 
+
+```{r}
+dat  %>%
+ggplot(aes(x = admin, y = scaled_score, color = admin))  +
+geom_boxplot() +
+scale_color_inova() +
+geom_jitter(alpha = 0.4, width = 0.25, color = "#999999") +
+theme_light() +
+labs(title= "SOL Scores",
+     subtitle = "KA's Tenure",
+     y = "Score",
+     x = "Academic Year",
+     color = "Subject Group"
+    )
+    
+```
+
+
+
+
+
+
+
+
+```{r}
+```
+
+## Subquestion: SOL scores by Subject
+
+
+```{r}
+ dat  %>%
+ ggplot(aes(x = core, y = scaled_score, color = core))  +
+ geom_boxplot() +
+ scale_color_inova() +
+ theme_light() +
+ labs(title= "SOL Scores",
+      subtitle = "K.A.'s Tenure",
+      y = "Score",
+      x = "Subject Group",
+      color = "Subject Group"
+     )
+```
+
+
+
+```{r}
+anova(lm(scaled_score ~ core, data = dat))
+car::leveneTest(scaled_score ~ core, data = dat)
+# need heteroskedasticity-robust standard errors here.
+
+```
+
+## SOL Scores by Time and Subject
+
+```{r}
+
+dat   %>%
+# heteroskedasticity-robust because of 2015-2016 SY
+rlm(scaled_score ~ admin*core, data = ., psi = psi.bisquare)  %>%
+tab_model()
+```
+
+
+```{r}
+# dummy variables generated for your own individual use:
+dat   %>%
+mutate(yearfirst = if_else(admin == "2015_2016", 1, 0))  %>%
+mutate(yearsecond = if_else(admin == "2016_2017", 1, 0))  %>%
+mutate(yearthird = if_else(admin == "2017_2018", 1, 0))  %>%
+mutate(yearfourth = if_else(admin == "2018_2019", 1, 0))  %>%
+mutate(mathematics = if_else(core == "math", 1,0))  %>%
+mutate(english = if_else(core =="eng",1,0))  %>%
+mutate(science = if_else(core =="sci", 1,0))  %>%
+mutate(history = if_else(core == "histss", 1,0))  %>%
+rlm(scaled_score ~ yearsecond + yearthird + yearfourth + mathematics + english + science +
+    yearsecond*mathematics + yearsecond*english + yearsecond*science +
+    yearthird*mathematics + yearthird*english + yearthird*science +
+    yearfourth*mathematics + yearfourth*english + yearfourth*science,
+    data = ., psi = psi.bisquare)  %>%
+tab_model()
+```
+
+```{r}
+# Two way anova interaction.
+# inova ANOVA!
+interaction.plot(x.factor = dat$admin, trace.factor = dat$core,
+                 response = dat$scaled_score, fun = mean,
+                 type = "b", legend = TRUE,
+                 xlab = "Academic Year", ylab="SOL Score",
+                 pch=c(1,19),
+                 col = c("#004b8d", "#d52b1e", "#6caddf", "#4d4f53"))
+    
+```
+
+
+
+# Question 2: FSIQ Over Time
+
+Having considered whether the SOL scores have changed over time, we might wonder what the effect is of the nature of our student population over time on our SOL pass rate. For example, we have all noted that 'types' of students tend to get referred in clusters and that this is a feedback loop wherein the Kellar School gets a reputation for doing well with a certain type of student and gets more of them. This analysis does not exclude SAILS, so to the extent that they take SOLs you might consider how the growth of that program affects the school's average IQ. 
+
+To address this question, we would do best to match each FSIQ to a student's start- and end-date and then create a running average for each day of the school year. However, start and end date data are difficult (but not impossible) to collect for ~300 datapoints; therefore we will instead map FSIQ scores to SOL administrations to determine the change over time:
+
+```{r fsiq_timeline, message=FALSE, warning=FALSE}
+dat  %>%
+ggplot(aes(x = date, y = fsiq))  +
+geom_jitter(color = "#4d4f53", alpha = 0.4, width = 0.25, height = 0.25)  +  
+geom_smooth( color ="#6caddf") +
+scale_color_inova() +
+theme_light() +
+labs(title= "Timeline of FSIQ",
+     subtitle = "K A's Tenure",
+     y = "FSIQ moving Average",
+     x = "date",
+     color = "Subject Group"
+    ) +
+scale_y_continuous() +
+scale_x_date(date_breaks = "1 month") +
+theme(axis.text.x = element_text(angle = 70, hjust = 1))
+  
+```
+
+We find the line is essentially flat. It does dip in the 2016-2017 school year (corresponding to a dip in SOL scores at the same time) but in general the peaks and valleys, such as they are, do not step outside the standard error bar, indicating that we can't conclude the line *isn't* flat. 
+
+I would conclude that despite a perceived increase in student ability in so-called Kellar Proper, there may be mitigating school-wide effects created by including SAILS in SOL scores, as SAILS students represent some (but not all) of the lowest-IQ students at TKS. In all, I wouldn't say that we have had any meaningful change in student ability. 
+
+## Question 2A: Testing an Assumption
+
+The question which asks whether student innate academic ability changes over time, when considered along with SOL scores, relies on the assumption that our measurement of student innate ability, in this case FSIQ, actually does correlate with SOL scores as an outcome. This is a fairly simple bivariate linear model, made somewhat more complex by the nested nature of IQ within students. 
+
+### Naive Model
+
+The naive model (i.e., not accounting for clustering) looks something like this: 
+
+```{r naivemod,message=FALSE, warning=FALSE}
+
+dat %>% 
+  dplyr::select(fsiq, scaled_score) %>% 
+  center(fsiq, 100)  %>% 
+  # Note--this model uses heteroskedasticity robust standard errors due to the unequal variances evidenced in the bivariate plot
+  rlm(scaled_score ~ fsiq, data = ., psi = psi.bisquare) %>% 
+  tab_model()
+
+dat %>% 
+  dplyr::select(fsiq, scaled_score) %>% 
+  center(fsiq, 100)  %>% 
+  ggplot(aes(x = fsiq, y = scaled_score)) +
+  geom_jitter(color = "#4d4f53") + 
+  geom_smooth(method = "lm", color ="#6caddf") +
+  theme_light() + 
+  labs(
+    title = "Relationship of IQ to SOL Score", 
+    x = "FSIQ (Centered around mean of 100)", 
+    y = "SOL Scaled Score"
+  ) + 
+  geom_hline(yintercept = 400, linetype = "dotted")
+  
+
+```
+
+We find two key features. First, a student with an average IQ of 100 is predicted to earn a 399 on an average SOL at The Kellar School. In other words, when an average student comes to us, they do not pass their SOL. Every additional IQ point the student adds gets them, on average, another 1.6 points on their SOL score. 
+
+In a perfect world, we might wish that this trend does not exist, as it would mean that students would do well or poorly for reasons other than their innate, born-with-it ability. I find the average score for an IQ of 100 to be more troubling, frankly. 
+
+### Clustered Model
+
+However, these effects are likely to be messed with by clustering at the student level (i.e. if we test certain types of students more than others, this will bias our outcome), so let's check it out with a model that corrects for clustering:
+
+```{r multilevel_iq_ss, message=FALSE, warning=FALSE}  
+
+model0 <- dat %>% 
+  center(fsiq, 100)  %>% 
+  lmer(scaled_score ~ 1 + (1 | sti), data = .)
+
+model1<-dat %>% 
+  center(fsiq, 100)  %>% 
+  lmer(scaled_score ~ 1 + fsiq + (1 | sti), data = .)
+
+tab_model(model0, model1)
+
+```
+
+In this version (not graphed) we find that when controlling for individual student level clusters, the average student who walks in the door earns a just-under-passing score of 399.74 on their SOL when you account for their IQ. (If you don't account for IQ, it's down to 392. This is just the effect of having a population where the average IQ is below 100). Once again, each IQ point gives a student a 1.7 point advantage on their SOL. 
+
+Interestingly, IQ only accounts for 66% of the within-student clustering effect (the ICC), whereas another 1/3 of it must be related to something else--error on the IQ test, or other student-level features such as mental health. Note that this model does *not* take teacher-level clustering into consideration. We'll have to explore that in...
+
+# Question 3: Teacher Efficacy
+# Question 4
+
+# Conclusion
