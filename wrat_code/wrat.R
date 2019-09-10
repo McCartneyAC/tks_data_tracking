@@ -1,6 +1,6 @@
 
 # data frame structure
-{studentname}tribble(
+{studentname}<-tribble(
 ~student,~value,~variable,~y_val,~grade_level,
 "{studentname}",102,"word_reading",0.01,9.6,
 "{studentname}",101,"sentence_reading",0.01,10.9,
