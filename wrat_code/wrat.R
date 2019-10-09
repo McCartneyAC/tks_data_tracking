@@ -23,10 +23,18 @@ dat <- as.data.frame(basis)%>%
 
 
 # run iteratively? 
-
 wrat_plot<-function(student, version){
     i<-student
-    
+    insert_layer <- function(P, after=0, ...) {
+          if (after < 0)
+            after <- after + length(P$layers)
+          if (!length(P$layers))
+            P$layers <- list(...)
+          else 
+            P$layers <- append(P$layers, list(...), after)
+          return(P)
+        }
+          
     p <- ggplot() + 
         theme_classic()+
         scale_x_continuous(
@@ -53,10 +61,11 @@ wrat_plot<-function(student, version){
         NULL 
     
     if (version == "blue") {
-        p + geom_density(data = dat, aes(x = stand), fill = "#6caddf") 
+        insert_layer(p, after = 0, geom_density(data = dat, aes(x = stand), fill = "#6caddf") )
+
     } else if (version == "green") {
-        p + geom_density(data = dat, aes(x = stand), fill = "#98E093") 
+        insert_layer(p, after = 0,geom_density(data = dat, aes(x = stand), fill = "#98E093") )
     }
+    
+
 }
-
-
