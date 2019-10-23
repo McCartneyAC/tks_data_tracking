@@ -46,6 +46,15 @@ referralsts <- ts(refer_ts2["n"], start = c(1997, 1), frequency = 12)
 
 autoplot(referralsts)
 
+autoplot(referralsts)  + 
+    #scale_x_continuous(limits = c(2010,2019),
+    #                  breaks = seq(2010, 2019, by = 1)) + 
+    geom_smooth(span = 0.25) + 
+    labs(title = "Referrals Longitudinally",
+        subtitle = "Referrals spiked in 2000 but have leveled off to average of 5 per month.") + 
+    theme_light()
+
+
 ggseasonplot(referralsts, continuous = TRUE, polar = TRUE) + 
     theme_light() + 
     labs(title = "There is no Cyclical Pattern of Referrals to TKS",
