@@ -34,7 +34,8 @@ refer_ts1 <- refer_ts1  %>%
     add_row(year = 1997, month = 12, n = 0)  %>% 
     add_row(year = 2008, month = 9, n = 0)  %>% 
     add_row(year = 2010, month = 5, n = 0)  %>% 
-    add_row(year = 2012, month = 2, n = 0) 
+    add_row(year = 2012, month = 2, n = 0) %>% 
+    arrange(year, month)
 
 # check for missing:
 refer_ts2  %>% 
