@@ -5,11 +5,6 @@ library(ggrepel)
 library(tibble)
 
 
-#gen normal dist data 
-basis <- rnorm(1000000)
-dat <- as.data.frame(basis)%>% 
-    mutate(stand = basis * 15 + 100) # Standardized Dist. 
-
 
 # data frame structure (THIS MUST BE PRECISE)
 {studentname}<-tribble(
@@ -24,6 +19,12 @@ dat <- as.data.frame(basis)%>%
 
 # run iteratively? 
 wrat_plot<-function(student, version){
+    #gen normal dist data 
+    basis <- rnorm(1000000)
+    dat <- as.data.frame(basis)%>% 
+        mutate(stand = basis * 15 + 100) # Standardized Dist. 
+
+
     i<-student
     insert_layer <- function(P, after=0, ...) {
           if (after < 0)
