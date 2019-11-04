@@ -28,12 +28,6 @@ points  %>%
   scale_y_continuous(limits = c(0.0, 3.0)) 
 
 
-library(mccrr)
-tidy_name = function(x) {
-  x = tolower(substr(abbreviate(x), 1, 7))
-  paste(c(x, rep('', 7 - nchar(x))), collapse = '')
-}
-tidy_name("Jonathan Aguilar-Lopez")
 
 pointsgraph <- function(df) {
   students <- unique(df$name)
